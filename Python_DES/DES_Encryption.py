@@ -52,3 +52,6 @@ print(f"This is the first 64-bit block from the input string: {make_list_of_bloc
 
 #print(f"This is the decimanl value of the character: {decimal_value}")
 #print(f"This is the binary value of the character: {binary_value}")
+
+
+#Linux commit
