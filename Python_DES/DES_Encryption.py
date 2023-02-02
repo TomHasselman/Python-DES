@@ -1,4 +1,5 @@
 import re #for regular expressions
+import os #for finding working directory so that the path for the plaintext file can be found
 
 def string_to_binary(input_string):
     """Takes a string as input and outputs the binary representation of it.
@@ -15,6 +16,10 @@ def string_to_binary(input_string):
         return_string += binary_value.rstrip()
         
     return return_string
+
+def strip_string(input_string):
+    """Removes all non-alphanumeric characters from the input string"""
+    return re.sub(r'\W+', '', input_string)
     
 def make_block(input_string, size):
     """Takes an string of binary data and breaks it into 64-bit chunks"""
@@ -34,15 +39,27 @@ def make_list_of_blocks(input_string, size):
         list_of_blocks[-1] = list_of_blocks[-1].ljust(size, '0')
         
     return list_of_blocks
+
+def generate_key(input_string):
+    """Generates a 56-bit key from the 8 character input string."""
+    if (len(input_string) == 8):
+        binary_string = string_to_binary(input_string)
+    else:
+        print("Keys can only be 8 characters long.") 
         
-user_string = input("Enter an ASCII String: ")
-print(user_string)
+        
+user_string_key = input("Enter an 8 character key: ")
+print(user_string_key)
 
-#strip user_string of non-alphanumeric characters
-stripped_user_string = re.sub(r'\W+', '', user_string)
-print(stripped_user_string)
 
-binary_string = string_to_binary(stripped_user_string)
+cwd = os.getcwd() #get the current working directory
+
+
+plaintext = open(cwd + '\Python_DES\plaintext.txt', 'r').read()
+stripped_plaintext = strip_string(plaintext)
+print(stripped_plaintext)
+
+binary_string = string_to_binary(plaintext)
 
 print(f"This is the first 64-bit block from the input string: {make_list_of_blocks(binary_string, 64)}")
 
@@ -52,3 +69,7 @@ print(f"This is the first 64-bit block from the input string: {make_list_of_bloc
 
 #print(f"This is the decimanl value of the character: {decimal_value}")
 #print(f"This is the binary value of the character: {binary_value}")
+
+#split 64 bit block into two 32 bit blocks
+#left_side = number >> 32   #upper 32 bits
+#right_side = number & 0xFFFFFFFF #lower 32 bits
