@@ -137,6 +137,7 @@ p_table = [
 
 list_of_left_shifted_keys = []
 
+
 def string_to_binary(input_string):
     """Takes a string as input and outputs the binary representation of it.
         Represents each ASCII character as an 8-bit value"""
@@ -208,6 +209,7 @@ def permute_list_of_blocks(list_to_permute, table):
         block = permute(block, table)
         temp_list.append(block)
         print(f"Initial permutation: {''.join(block)}")
+        output_file.write(f"Initial permutation: {''.join(block)}\n")
         
     return temp_list
 
@@ -224,6 +226,7 @@ def subkey_generation(key_string, list_to_add_to):
         list_to_add_to.append(permute(key_left + key_right, pc2))
         
         print(f"Subkey number {i+1} is: {''.join(list_to_add_to[i])}")
+        output_file.write(f"Subkey number {i+1} is: {''.join(list_to_add_to[i])}\n")
         
     
 
@@ -256,12 +259,15 @@ def pretty_print_data(block_list, size):
     for block in block_list:
         for i in range(0,len(block),size):
             print(block[i:i+size])
+            output_file.write(block[i:i+size]+"\n")
             
 def encipher_function(block, key):
     left_side = block[:32] #first 32 bits
     print(f"Left side: {''.join(left_side)}")
+    output_file.write(f"Left side: {''.join(left_side)}\n")
     right_side = block[32:] #last 32 bits
     print(f"Right side: {''.join(right_side)}")
+    output_file.write(f"Right side: {''.join(right_side)}\n")
     
     k_block = key[:48] #first 48 bits
     
@@ -269,12 +275,14 @@ def encipher_function(block, key):
     new_right_side = permute(right_side, expansion_table) 
     
     print(f"Expansion permutation: {''.join(new_right_side)}")
+    output_file.write(f"Expansion permutation: {''.join(new_right_side)}\n")
     
     
     
     xor_result = XOR(new_right_side, k_block)
     
     print("XOR result: ")
+    output_file.write("XOR result: \n")
     
     xor_result_list = make_list_of_blocks(xor_result, 6)
     pretty_print_data(xor_result_list, 6)
@@ -288,14 +296,17 @@ def encipher_function(block, key):
         i += 1
         
     print(f"S-box substitution: {sbox_result_string}")
+    output_file.write(f"S-box substitution: {sbox_result_string}\n")
     
     p_permutation = permute(sbox_result_string, p_table)
     
     print(f"P permutation: {''.join(p_permutation)}")
+    output_file.write(f"P permutation: {''.join(p_permutation)}\n")
     
     final_right_side = XOR(p_permutation, left_side)
     
     print(f"XOR with left side: {''.join(final_right_side)}")
+    output_file.write(f"XOR with left side: {''.join(final_right_side)}\n")
     
     if key == list_of_left_shifted_keys[-1]: #this means it's the last iteration and the sides don't need to be swapped
         whole_block = list(final_right_side) + new_left_side
@@ -310,6 +321,7 @@ def encrypt_iterate(block, key_list):
     
     for i in range(16):
         print(f"iteration: {i+1}")
+        output_file.write(f"iteration: {i+1}\n")
         block = encipher_function(block, key_list[i])
         
     return permute(block, ip_inverse)    
@@ -318,6 +330,7 @@ def decrypt_iterate(block, key_list):
     
     for i in range(15,-1,-1):
         print(f"iteration: {i+1}")
+        output_file.write(f"iteration: {i+1}\n")
         block = encipher_function(block, key_list[i])
         
     return permute(block, ip_inverse)
@@ -347,25 +360,27 @@ def XOR(string1, string2):
 
 
         
+cwd = os.getcwd() #get the current working directory    
     
-    
-           
+output_file = open(cwd + '\Python_DES\output.txt', 'w')           
         
 user_string_key = input("Enter an 8 character key: ")
 print(user_string_key)
 
 user_string_key = key_string_to_binary(user_string_key)
 print(f"The input key is: {user_string_key}")
+output_file.write(f"The input key is: {user_string_key}\n")
 
 user_string_key = list(user_string_key)
 
 user_string_key = permute(user_string_key, pc1)
   
 print(f"The key after pc1: {''.join(user_string_key)}")
+output_file.write(f"The key after pc1: {''.join(user_string_key)}\n")
 
 subkey_generation(user_string_key, list_of_left_shifted_keys)
 
-cwd = os.getcwd() #get the current working directory
+
 
 
 plaintext = open(cwd + '\Python_DES\plaintext.txt', 'r').read()
@@ -376,6 +391,7 @@ binary_string = string_to_binary(plaintext)
 list_of_blocks = make_list_of_blocks(binary_string, 64)
 
 print(f"Data after preprocessing: ")
+output_file.write(f"Data after preprocessing: \n")
 pretty_print_data(list_of_blocks, 8)
 
 
@@ -386,7 +402,9 @@ cipher_text = []
 #encrypt every block in the list of blocks, using the same list of keys every time
 for block in list_of_blocks: 
     print(f"Encypting block{list_of_blocks.index(block)+1}....")
+    output_file.write(f"Encypting block{list_of_blocks.index(block)+1}....\n")
     cipher_text.append(''.join(encrypt_iterate(block, list_of_left_shifted_keys)))
     print(f"Final permutation: {''.join(cipher_text[list_of_blocks.index(block)])}")
+    output_file.write(f"Final permutation: {''.join(cipher_text[list_of_blocks.index(block)])}\n")
     
 fixed_cipher_text = ''.join(str(cipher_text))
