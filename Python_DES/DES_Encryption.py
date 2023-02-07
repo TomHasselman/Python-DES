@@ -1,6 +1,7 @@
 import re #for regular expressions
 import os #for finding working directory so that the path for the plaintext file can be found
 
+#The following tables are taken from FIPS PUB 46-3. They are permutation tables used in the DES algorithm
 pc1 = [
   57, 49, 41, 33, 25, 17, 9,
   1, 58, 50, 42, 34, 26, 18, 
@@ -57,6 +58,7 @@ expansion_table = [ 32, 1, 2, 3, 4, 5,
 ]
 
 
+#The sboxes are placed in a list so that it's easy to access the correct sbox at the correct time
 sbox_list = [
 
     #sbox1 
@@ -135,7 +137,8 @@ p_table = [
             22, 11, 4, 25
 ]
 
-list_of_left_shifted_keys = []
+
+list_of_keys = []
 
 
 def string_to_binary(input_string):
@@ -150,7 +153,7 @@ def string_to_binary(input_string):
         decimal_value = ord(character)
         binary_value = bin(decimal_value)[2:].zfill(8) # bin() prepends "0b" to the value, so slice it off. 
                                                        #Then pad with zero so that the value is 8 bits
-        return_string += binary_value.rstrip()
+        return_string += binary_value
         
     return return_string
 
@@ -203,6 +206,8 @@ def permute(input_string, table):
     return temp_list
 
 def permute_list_of_blocks(list_to_permute, table):
+    """takes a list of blocks and a permutation table as parameters.
+        Then called the permute() function to permute each block in the list."""
     temp_list = []
     
     for block in list_to_permute:
@@ -214,6 +219,9 @@ def permute_list_of_blocks(list_to_permute, table):
     return temp_list
 
 def subkey_generation(key_string, list_to_add_to):
+    """Takes a ket in the form of a string and creates a list of 16 subkeys.
+        The key is split into two halves before being left shifted accoring to the list left_shift_list.
+        The entire subkey is then permuted by the pc2 table and added to the list_to_add_to list"""
     key_left = key_string[:28] #first 28 bits
     key_right = key_string[28:] #last 28 bits
 
@@ -262,6 +270,9 @@ def pretty_print_data(block_list, size):
             output_file.write(block[i:i+size]+"\n")
             
 def encipher_function(block, key):
+    """The main function that performs DES.
+        Takes a 64-bit block and a 64-bit key as parameters.
+        returns the final block from one iteration of DES."""
     left_side = block[:32] #first 32 bits
     print(f"Left side: {''.join(left_side)}")
     output_file.write(f"Left side: {''.join(left_side)}\n")
@@ -308,7 +319,7 @@ def encipher_function(block, key):
     print(f"XOR with left side: {''.join(final_right_side)}")
     output_file.write(f"XOR with left side: {''.join(final_right_side)}\n")
     
-    if key == list_of_left_shifted_keys[-1]: #this means it's the last iteration and the sides don't need to be swapped
+    if key == list_of_keys[-1]: #this means it's the last iteration and the sides don't need to be swapped
         whole_block = list(final_right_side) + new_left_side
         return whole_block
     
@@ -318,6 +329,8 @@ def encipher_function(block, key):
 
   
 def encrypt_iterate(block, key_list):
+    """Takes a 64-bit block and a list of subkeys as parameters.
+        Calls the encipher_function() 16 times to permorm the 16 iterations of DES."""
     
     for i in range(16):
         print(f"iteration: {i+1}")
@@ -327,6 +340,9 @@ def encrypt_iterate(block, key_list):
     return permute(block, ip_inverse)    
 
 def decrypt_iterate(block, key_list):
+    """Takes a 64-bit block and a list of subkeys as parameters.
+        Loops throught the list of subkeys in reverse in order to decrypt the block.
+        Calls the encipher_function() 16 times to permorm the 16 iterations of DES."""
     
     for i in range(15,-1,-1):
         print(f"iteration: {i+1}")
@@ -349,6 +365,7 @@ def sbox_lookup(block, s_box):
   
   
 def XOR(string1, string2):
+    """performs a bit-wise XOR on the two strings passed as parameters."""
     result = ''
     
     for i in range(len(string1)):
@@ -362,39 +379,48 @@ def XOR(string1, string2):
         
 cwd = os.getcwd() #get the current working directory    
     
+#open the output file, creating it if necessary
 output_file = open(cwd + '\Python_DES\output.txt', 'w')           
-        
+    
+#prompts the user to enter an 8-character key    
 user_string_key = input("Enter an 8 character key: ")
 print(user_string_key)
 
+#converts the key to binary
 user_string_key = key_string_to_binary(user_string_key)
 print(f"The input key is: {user_string_key}")
 output_file.write(f"The input key is: {user_string_key}\n")
 
+
 user_string_key = list(user_string_key)
 
+#permute the user's key by the pc1 table
 user_string_key = permute(user_string_key, pc1)
   
 print(f"The key after pc1: {''.join(user_string_key)}")
 output_file.write(f"The key after pc1: {''.join(user_string_key)}\n")
 
-subkey_generation(user_string_key, list_of_left_shifted_keys)
+#pass the user's permuted key and the list of keys to the subkey_generation function
+#this function modifies the list that it passed to it, so no need to set the list equal to the function call
+subkey_generation(user_string_key, list_of_keys)
 
 
 
-
+#open the plaintext file
 plaintext = open(cwd + '\Python_DES\plaintext.txt', 'r').read()
 stripped_plaintext = strip_string(plaintext)
 print(stripped_plaintext)
 
+#convert the plaintext to binary
 binary_string = string_to_binary(plaintext)
+#user the make_list_of_blocks function to create a list of 64-bit blocks
 list_of_blocks = make_list_of_blocks(binary_string, 64)
 
 print(f"Data after preprocessing: ")
 output_file.write(f"Data after preprocessing: \n")
 pretty_print_data(list_of_blocks, 8)
 
-
+#permute each block by the initial permutation table
 list_of_blocks = permute_list_of_blocks(list_of_blocks, ip)
 
 cipher_text = []
@@ -403,8 +429,7 @@ cipher_text = []
 for block in list_of_blocks: 
     print(f"Encypting block{list_of_blocks.index(block)+1}....")
     output_file.write(f"Encypting block{list_of_blocks.index(block)+1}....\n")
-    cipher_text.append(''.join(encrypt_iterate(block, list_of_left_shifted_keys)))
+    cipher_text.append(''.join(encrypt_iterate(block, list_of_keys)))
     print(f"Final permutation: {''.join(cipher_text[list_of_blocks.index(block)])}")
     output_file.write(f"Final permutation: {''.join(cipher_text[list_of_blocks.index(block)])}\n")
     
-fixed_cipher_text = ''.join(str(cipher_text))
