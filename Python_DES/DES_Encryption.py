@@ -135,6 +135,8 @@ p_table = [
             22, 11, 4, 25
 ]
 
+list_of_left_shifted_keys = []
+
 def string_to_binary(input_string):
     """Takes a string as input and outputs the binary representation of it.
         Represents each ASCII character as an 8-bit value"""
@@ -295,17 +297,30 @@ def encipher_function(block, key):
     
     print(f"XOR with left side: {''.join(final_right_side)}")
     
-    whole_block = list(final_right_side) + new_left_side
+    if key == list_of_left_shifted_keys[-1]: #this means it's the last iteration and the sides don't need to be swapped
+        whole_block = list(final_right_side) + new_left_side
+        return whole_block
+    
+    whole_block = new_left_side + list(final_right_side)
     
     return whole_block
 
   
 def encrypt_iterate(block, key_list):
+    
     for i in range(16):
         print(f"iteration: {i+1}")
         block = encipher_function(block, key_list[i])
         
     return permute(block, ip_inverse)    
+
+def decrypt_iterate(block, key_list):
+    
+    for i in range(15,-1,-1):
+        print(f"iteration: {i+1}")
+        block = encipher_function(block, key_list[i])
+        
+    return permute(block, ip_inverse)
     
     
     
@@ -348,8 +363,6 @@ user_string_key = permute(user_string_key, pc1)
   
 print(f"The key after pc1: {''.join(user_string_key)}")
 
-list_of_left_shifted_keys = []
-
 subkey_generation(user_string_key, list_of_left_shifted_keys)
 
 cwd = os.getcwd() #get the current working directory
@@ -368,6 +381,12 @@ pretty_print_data(list_of_blocks, 8)
 
 list_of_blocks = permute_list_of_blocks(list_of_blocks, ip)
 
-for block in list_of_blocks:
+cipher_text = []
+
+#encrypt every block in the list of blocks, using the same list of keys every time
+for block in list_of_blocks: 
     print(f"Encypting block{list_of_blocks.index(block)+1}....")
-    print(f"Final permutation: {''.join(encrypt_iterate(block, list_of_left_shifted_keys))}")
+    cipher_text.append(''.join(encrypt_iterate(block, list_of_left_shifted_keys)))
+    print(f"Final permutation: {''.join(cipher_text[list_of_blocks.index(block)])}")
+    
+fixed_cipher_text = ''.join(str(cipher_text))
