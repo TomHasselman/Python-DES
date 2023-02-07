@@ -295,7 +295,18 @@ def encipher_function(block, key):
     
     print(f"XOR with left side: {''.join(final_right_side)}")
     
-    return new_left_side + list(final_right_side)
+    whole_block = list(final_right_side) + new_left_side
+    
+    return whole_block
+
+  
+def encrypt_iterate(block, key_list):
+    for i in range(16):
+        print(f"iteration: {i+1}")
+        block = encipher_function(block, key_list[i])
+        
+    return permute(block, ip_inverse)    
+    
     
     
 def sbox_lookup(block, s_box):
@@ -319,10 +330,8 @@ def XOR(string1, string2):
             result += '1'
     return result  
 
-def encrypt_iterate(block, key_list):
-    for i in range(16):
-        print(f"iteration: {i+1}")
-        block = encipher_function(block, key_list[i])
+
+        
     
     
            
@@ -360,6 +369,5 @@ pretty_print_data(list_of_blocks, 8)
 list_of_blocks = permute_list_of_blocks(list_of_blocks, ip)
 
 for block in list_of_blocks:
-    encrypt_iterate(block, list_of_left_shifted_keys)
-    
-#sides are not being preserved properly. Left side seems to be correct, but improper handling of right side is causing the rest of encryption to fail
+    print(f"Encypting block{list_of_blocks.index(block)+1}....")
+    print(f"Final permutation: {''.join(encrypt_iterate(block, list_of_left_shifted_keys))}")
