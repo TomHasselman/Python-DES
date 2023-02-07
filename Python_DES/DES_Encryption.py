@@ -380,7 +380,7 @@ def XOR(string1, string2):
 cwd = os.getcwd() #get the current working directory    
     
 #open the output file, creating it if necessary
-output_file = open(cwd + '\Python_DES\output.txt', 'w')           
+output_file = open(cwd + '/Python_DES/output.txt', 'w')           
     
 #prompts the user to enter an 8-character key    
 user_string_key = input("Enter an 8 character key: ")
@@ -407,7 +407,7 @@ subkey_generation(user_string_key, list_of_keys)
 
 
 #open the plaintext file
-plaintext = open(cwd + '\Python_DES\plaintext.txt', 'r').read()
+plaintext = open(cwd + '/Python_DES/plaintext.txt', 'r').read()
 stripped_plaintext = strip_string(plaintext)
 print(stripped_plaintext)
 
