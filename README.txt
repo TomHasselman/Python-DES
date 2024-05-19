@@ -6,5 +6,3 @@
 ## Libraries
     * os - Allows for access to operating system commands and the ability to find the working directory
     * re - Used for regex
-
-### remember to add more
